@@ -1,4 +1,4 @@
-package br.com.lcoutinho;
+package br.com.bcoutinho;
 
 public class PrimeiraClasse {
 

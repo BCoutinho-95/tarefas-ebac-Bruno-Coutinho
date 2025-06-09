@@ -1,9 +1,12 @@
 
+-- TABELAS
+
 create table tb_cliente (
 	id bigint,
 	nome varchar(50) not null,
 	cpf bigint not null,
 	tel bigint not null,
+	email varchar(100) not null, -- NOVO CAMPO
 	endereco varchar(50) not null,
 	numero bigint not null,
 	cidade varchar(50) not null,
@@ -12,13 +15,13 @@ create table tb_cliente (
 	constraint pk_id_cliente primary key(id)
 );
 
-
 create table tb_produto(
 	id bigint,
 	codigo varchar(10) not null,
 	nome varchar(50) not null,
 	descricao varchar(100) not null,
 	valor numeric(10,2) not null,
+	categoria varchar(50) not null, -- NOVO CAMPO
 	constraint pk_id_produto primary key(id)
 );
 
@@ -44,6 +47,8 @@ create table tb_produto_quantidade(
 	constraint fk_id_prod_venda_venda foreign key(id_venda_fk) references tb_venda(id)
 );
 
+-- SEQUÊNCIAS
+
 create sequence sq_cliente
 start 1
 increment 1
@@ -64,26 +69,64 @@ start 1
 increment 1
 owned by tb_produto_quantidade.id;
 
-ALTER TABLE TB_CLIENTE
-ADD CONSTRAINT UK_CPF_CLIENTE UNIQUE (CPF);
+-- CONSTRAINTS ÚNICAS
 
-ALTER TABLE TB_PRODUTO
-ADD CONSTRAINT UK_CODIGO_PRODUTO UNIQUE (CODIGO);
+ALTER TABLE tb_cliente
+ADD CONSTRAINT uk_cpf_cliente UNIQUE (cpf);
 
-ALTER TABLE TB_VENDA
-ADD CONSTRAINT UK_CODIGO_VENDA UNIQUE (CODIGO);
+ALTER TABLE tb_produto
+ADD CONSTRAINT uk_codigo_produto UNIQUE (codigo);
 
+ALTER TABLE tb_venda
+ADD CONSTRAINT uk_codigo_venda UNIQUE (codigo);
 
-SELECT V.ID AS ID_VENDA, V.CODIGO, V.ID_CLIENTE_FK, V.VALOR_TOTAL, V.DATA_VENDA, V.STATUS_VENDA,
-C.ID AS ID_CLIENTE, C.NOME, C.CPF, C.TEL, C.ENDERECO, C.NUMERO, C.CIDADE, C.ESTADO,
-P.ID AS ID_PROD_QTD, P.QUANTIDADE, P.VALOR_TOTAL AS PROD_QTD_VALOR_TOTAL
-FROM TB_VENDA V 
-INNER JOIN TB_CLIENTE C ON V.ID_CLIENTE_FK = C.ID
-INNER JOIN TB_PRODUTO_QUANTIDADE P ON P.ID_VENDA_FK = V.ID
-WHERE V.CODIGO = 'A1';
+-- CONSULTA 1: Detalhes da venda (agora com email do cliente e categoria do produto)
 
+SELECT 
+  v.id AS id_venda,
+  v.codigo,
+  v.id_cliente_fk,
+  v.valor_total,
+  v.data_venda,
+  v.status_venda,
 
-SELECT PQ.ID, PQ.QUANTIDADE, PQ.VALOR_TOTAL,
-P.ID AS ID_PRODUTO, P.CODIGO, P.NOME, P.DESCRICAO, P.VALOR
-FROM TB_PRODUTO_QUANTIDADE PQ
-INNER JOIN TB_PRODUTO P ON P.ID = PQ.ID_PRODUTO_FK;
+  c.id AS id_cliente,
+  c.nome,
+  c.cpf,
+  c.tel,
+  c.email,
+  c.endereco,
+  c.numero,
+  c.cidade,
+  c.estado,
+
+  pq.id AS id_prod_qtd,
+  pq.quantidade,
+  pq.valor_total AS prod_qtd_valor_total,
+
+  p.id AS id_produto,
+  p.nome AS nome_produto,
+  p.categoria
+
+FROM tb_venda v 
+INNER JOIN tb_cliente c ON v.id_cliente_fk = c.id
+INNER JOIN tb_produto_quantidade pq ON pq.id_venda_fk = v.id
+INNER JOIN tb_produto p ON p.id = pq.id_produto_fk
+WHERE v.codigo = 'A1';
+
+-- CONSULTA 2: Produtos em vendas (agora com categoria)
+
+SELECT 
+  pq.id,
+  pq.quantidade,
+  pq.valor_total,
+
+  p.id AS id_produto,
+  p.codigo,
+  p.nome,
+  p.descricao,
+  p.valor,
+  p.categoria
+
+FROM tb_produto_quantidade pq
+INNER JOIN tb_produto p ON p.id = pq.id_produto_fk;
